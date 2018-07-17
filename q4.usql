@@ -1,0 +1,34 @@
+
+@searchlog =
+    EXTRACT Tcs int,
+            Main string, 
+            Midblock_Route string,
+            Side_1_Route string,
+            Side_2_Route string,
+            Activation_Date DateTime,
+            Latitude float,
+            Longitude float,
+            Count_Date DateTime,
+            Peak_Hr_Vehicle_Volume int,
+            Peak_Hr_Pedestrian_Volume int
+    FROM "/dataset/data.csv" 
+    USING Extractors.Csv(encoding: Encoding.UTF8, skipFirstNRows:1, nullEscape : "/N");
+
+@rs1 =
+    SELECT
+        Convert.ToInt32([Count_Date].DayOfWeek) + 1 AS DayOfTheWeek,
+        Peak_Hr_Vehicle_Volume,
+        Peak_Hr_Pedestrian_Volume
+    FROM @searchlog;
+
+@res =
+    SELECT
+        DayOfTheWeek,
+        SUM(Peak_Hr_Vehicle_Volume + Peak_Hr_Pedestrian_Volume) AS Total_Volume
+    FROM @rs1
+    GROUP BY DayOfTheWeek;
+
+
+OUTPUT @res
+    TO "/q1/q4_result-u-sql.csv"
+    USING Outputters.Csv(outputHeader: true);

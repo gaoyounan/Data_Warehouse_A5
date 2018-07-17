@@ -1,0 +1,42 @@
+
+@searchlog =
+    EXTRACT Tcs int,
+            Main string, 
+            Midblock_Route string,
+            Side_1_Route string,
+            Side_2_Route string,
+            Activation_Date DateTime,
+            Latitude float,
+            Longitude float,
+            Count_Date DateTime,
+            Peak_Hr_Vehicle_Volume int,
+            Peak_Hr_Pedestrian_Volume int
+    FROM "/dataset/data.csv" 
+    USING Extractors.Csv(encoding: Encoding.UTF8, skipFirstNRows:1, nullEscape : "/N");
+
+@rs1 =
+    SELECT
+        Latitude,
+        Longitude,
+        Peak_Hr_Vehicle_Volume,
+        Peak_Hr_Pedestrian_Volume
+    FROM @searchlog
+    WHERE Count_Date >= DateTime.Parse("01/01/2013") AND Count_Date <= DateTime.Parse("08/01/2018");
+
+@rs2 =
+    SELECT
+        Latitude,
+        Longitude,
+        SUM(Peak_Hr_Vehicle_Volume + Peak_Hr_Pedestrian_Volume) AS Total_Volume
+    FROM @rs1
+    GROUP BY Latitude, Longitude;
+
+@res =
+    SELECT *
+    FROM @rs2
+    ORDER BY Total_Volume DESC
+    FETCH 10 ROWS;
+
+OUTPUT @res
+    TO "/q1/q2_result-u-sql.csv"
+    USING Outputters.Csv(outputHeader: true);

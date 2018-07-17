@@ -1,0 +1,25 @@
+
+@searchlog =
+    EXTRACT Tcs int,
+            Main string, 
+            Midblock_Route string,
+            Side_1_Route string,
+            Side_2_Route string,
+            Activation_Date DateTime,
+            Latitude float,
+            Longitude float,
+            Count_Date DateTime,
+            Peak_Hr_Vehicle_Volume int,
+            Peak_Hr_Pedestrian_Volume int
+    FROM "/dataset/data.csv" 
+    USING Extractors.Csv(encoding: Encoding.UTF8, skipFirstNRows:1, nullEscape : "/N");
+
+@rs1 =
+    SELECT
+        Main,
+        AVG(Peak_Hr_Vehicle_Volume) AS AVG_Vehicle_Volume
+    FROM @searchlog
+GROUP BY Main;
+OUTPUT @rs1
+    TO "/q1/q1_result-u-sql.csv"
+    USING Outputters.Csv(outputHeader: true);
